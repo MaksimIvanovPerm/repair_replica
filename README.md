@@ -17,5 +17,5 @@ It might be very profitable in terms of saving time cost which make by execution
 A bit of information related to `dbms_comparison` mechanic;
 It saves and stores metadata about source and replica tables row-divergences in table `SYS.COMPARISON_ROW_DIF$`, in `SYSAUX` tablespace;
 So according to aims of use of `SYS.COMPARISON_ROW_DIF$` - this table tend to be fragmented and tend to grow quite rapidly;
-Dropping and/or purging used and non-actual comparisons data tend to work very slowly, when this table is big enough and fragmented;
-MOS note `2089484.1` says that you're able to just truncate this tablem with drop-storage option, in order to defragment it;
+
+Dropping and/or purging data of used and non-actual comparisons tend to work very slowly, when this table is big enough and fragmented;MOS note `2089484.1` says that you're able to just truncate this tablem with drop-storage option, in order to defragment it;
