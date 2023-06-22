@@ -11,8 +11,8 @@ And execute sql-scripts, in order, which is implied by their names;
 That is: `1.sql`, then `2.sql`, and so on;
 
 Execution of script `3a.sql` is optional, and if you want to execute this one - it is supposed to be done after `3.sql`;
-`3a.sql` makes local copy of source-table, tha is - it localizes data of source-table near, in the same db, where replicat lives;
-It might be very profitable in terms of saving time cost which make by executions of dml-statement of repair script - they can work with localy placed data, not with remoute db, through db-link;
+`3a.sql` makes local copy of source-table, that is - it localizes data of source-table near, in the same db, where replicat lives;
+It might be very profitable in terms of saving time cost which is made by executions of dml-statement of repair script - they can work with localy placed data, not with remoute db, through db-link;
 
 A bit of information related to `dbms_comparison` mechanic;
 It saves and stores metadata about source and replica tables row-divergences in table `SYS.COMPARISON_ROW_DIF$`, in `SYSAUX` tablespace;
