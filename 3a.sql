@@ -1,13 +1,12 @@
-set arraysize 5000 serveroutput on
+set arraysize 5000 rowprefetch 2 serveroutput on
 whenever sqlerror continue
 
-undefine LOCAL_TEMP_COPY
-define LOCAL_TEMP_COPY="COMPARISON_COPY_OF_SOURCE_TABLE"
-
-undefine LOCAL_TEMP_COPY_PK_NAME
-define   LOCAL_TEMP_COPY_PK_NAME="&&LOCAL_TEMP_COPY._PK"
-undefine LOCAL_TEMP_COPY_PK_IDX_NAME
-define LOCAL_TEMP_COPY_PK_IDX_NAME="&&LOCAL_TEMP_COPY._PK"
+begin
+   if :v_flag='Y' then
+       dbms_output.put_line('It looks like you already accomplished localization');
+   end if;
+end;
+/
 
 
 undefine key_cols_list
@@ -35,8 +34,10 @@ declare
     v_lc_name    varchar2(128) := upper('&&LOCAL_TEMP_COPY');
     n            number;
 begin
+    if :v_flag='Y' then v_answer:='N'; end if; -- because localization already accomplished;
+
     if v_answer != 'Y' then
-        dbms_output.put_line('You prefered not to create local copy');
+        dbms_output.put_line('You prefered not to create local copy; Or it already created;');
     else
         dbms_output.put_line('Check if table '||v_lc_owner||'.'||v_lc_name||'  exists');
         select count(*) 
@@ -64,6 +65,7 @@ set termout on
 declare
    v_answer     varchar2(30) := nvl( upper('&&v_answer'), 'N');
 begin
+   if :v_flag='Y' then v_answer:='N'; end if; -- because localization already accomplished;
    if v_answer = 'Y' then
       dbms_output.put_line('Creating local table');  
    end if;
@@ -76,7 +78,7 @@ declare
     v_lc_name    varchar2(128) := upper('&&LOCAL_TEMP_COPY');
     v_ts         varchar2(30) := upper('&&V_TARGET_OBJ_TS');
     v_sc_owner   varchar2(30) := upper('&&SC_OWNER');
-    v_sc_name    varchar2(30) := upper('&&SC_NAME');
+    v_sc_name    varchar2(128) := upper('&&SC_NAME');
     v_db_link    varchar2(30) := '&&DBLINK_NAME';
     n            number;
     v_str        varchar2(4000) := '';
@@ -85,6 +87,7 @@ declare
     v_cols       varchar2(1024) := '';
     v_count      number;
     v_src_cols   varchar2(4000);
+    v_comp_mode  varchar2(64) := lower('&&compress_mode');
 
     cursor c1 is
     select *
@@ -104,6 +107,7 @@ declare
     ;
 
 begin
+    if :v_flag='Y' then v_answer:='N'; end if; -- because localization already accomplished;
     if v_answer = 'Y' then
        v_count:=0;
        v_cols:='';
@@ -142,15 +146,22 @@ begin
            end if;
            n:=n+1;
        end loop;
-
+   
+       if v_comp_mode in ('compress', 'row store compress basic', 'row store compress basic') then
+           dbms_output.put_line('Compress mode: '||v_comp_mode);
+       else
+           dbms_output.put_line('Empty or unexpected value for compress mode: '||v_comp_mode);
+           v_comp_mode:='none';
+           dbms_output.put_line('CTAS is going to be executed without compression of newly created table');
+       end if;
+       
        v_str :=                 'create table '||v_lc_owner||'.'||v_lc_name||' tablespace '||v_ts;
-       v_str := v_str||chr(10)||'as select /*+ driving_site(t)*/ ';
+       if v_comp_mode != 'none' then
+          v_str := v_str||chr(10)||v_comp_mode;
+       end if;
+       v_str := v_str||chr(10)||'as select ';
        v_str := v_str||chr(10)||v_src_cols;
        v_str := v_str||chr(10)||'from '||v_sc_owner||'.'||v_sc_name||'@'||v_db_link||' as of scn  '||v_scn||' t';
-       v_str := v_str||chr(10)||'   where ('||v_cols||') in (';
-       v_str := v_str||chr(10)||'select '||v_aux||' from sys.DBA_COMPARISON_ROW_DIF i';
-       v_str := v_str||chr(10)||'where i.owner=Upper(''&&v_c_owner'') and i.comparison_name=Upper(''&&v_c_name'')';
-       v_str := v_str||chr(10)||'   )';
        dbms_output.put_line( v_str );
        execute immediate v_str;
     end if;
@@ -160,6 +171,7 @@ end;
 declare
    v_answer     varchar2(30) := nvl( upper('&&v_answer'), 'N');
 begin
+   if :v_flag='Y' then v_answer:='N'; end if; -- because localization already accomplished;
    if v_answer = 'Y' then
       dbms_output.put_line('Making pk');
    end if;
@@ -177,6 +189,7 @@ declare
     v_str        varchar2(4000) := '';
     v_dop        integer := nvl(to_number( upper('&&v_dop') ), 1);
 begin
+   if :v_flag='Y' then v_answer:='N'; end if; -- because localization already accomplished;
    if v_answer = 'Y' then
       dbms_output.put_line('DOP is: '||v_dop);
       if v_dop = 1 then

@@ -1,4 +1,4 @@
-set newp none pagesize 0 linesize 1024 appinfo qqq1 verify off linesize 1024 serveroutput on echo off feedback off
+set newp none pagesize 0 linesize 1024 appinfo DBMS_COMPARISON verify off linesize 1024 serveroutput on echo off feedback off
 set history on
 DEFINE _EDITOR = vi
 whenever sqlerror exit failure
@@ -18,15 +18,25 @@ undefine v_dop
 undefine local_temp_copy
 undefine local_temp_copy_pk_name
 undefine local_temp_copy_pk_idx_name
+undefine localdblink
+undefine compress_mode
+undefine session_module
+var v_flag char(1)
 
-define sc_owner="SOURCE_SIDE_OWBER"
-define sc_name="SOURCE_TABLE"
-define rp_owner="REPLICA_SIDE_OWBER"
-define rp_name="REPLICA_TABLE"
-define dblink_name="DBLINK.WORLD"
+define sc_owner="SM"
+define sc_name="SUPPORT_EXPEDITION"
+define rp_owner="R_LM_157"
+define rp_name="SUPPORT_EXPEDITION"
+define dblink_name="LMPROD.WORLD"
 define v_c_name="&&rp_owner._&&rp_name"
-define v_dirname="DIR_FOR_MAKING_REPAIR_SQLSCRIPT"
+define v_dirname="GGATEEXP"
 define v_dop=1
+define compress_mode="compress"
+define localdblink="LOCALDB.WORLD"
+define LOCAL_TEMP_COPY="COMPARISON_COPY_OF_SOURCE_TABLE"
+define LOCAL_TEMP_COPY_PK_NAME="&&LOCAL_TEMP_COPY._PK"
+define LOCAL_TEMP_COPY_PK_IDX_NAME="&&LOCAL_TEMP_COPY._PK"
+define session_module="DBMS_COMPARISON"
 column v_dirpath new_value v_dirpath noprint
 select directory_path as v_dirpath from sys.dba_directories where directory_name=upper('&&v_dirname');
 
@@ -101,7 +111,24 @@ begin
 end;
 /
 
+declare
+    v  number;
+begin
+    select count(*)
+    into v
+    from sys.dba_db_links t
+    where t.owner=Upper('&&v_c_owner') and t.db_link=upper('&&localdblink');
 
+    if v!=1 then
+        raise_application_error(-20001, 'Error: db-link &&localdblink doesn''t exist; It''s supposed to be db-link which pointed to this schema in this db;');
+    else
+        dbms_output.put_line('Ok: there is db-link &&localdblink');
+    end if;
+end;
+/
+
+spool session.log replace
+set appinfo &&session_module
 Prompt summary:
 Prompt source table:.......................&&sc_owner..&&sc_name@&&dblink_name
 Prompt source table size, Mb:..............&&v_src_object_size
@@ -111,7 +138,8 @@ Prompt comparison name is supposed to be:..&&v_c_name
 Prompt directory object name is:...........&&v_dirname
 Prompt directory path is:..................&&v_dirpath
 Prompt dop:................................&&v_dop
-
+Prompt compress_mode:......................&&compress_mode
+Prompt local db-link name:.................&&localdblink
 accept v_answer char prompt '>Would you like to continue? '
 
 

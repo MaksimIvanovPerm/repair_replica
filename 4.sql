@@ -1,5 +1,5 @@
 undefine V_ANSWER
-accept v_answer char prompt 'Is source table  &&SC_OWNER..&&SC_NAME@&&DBLINK_NAME localized [yn]? '
+accept v_answer char prompt 'Is &&SC_OWNER..&&SC_NAME@&&DBLINK_NAME actually local table [yn]? '
 
 DECLARE
     f1                 utl_file.file_type;
@@ -11,7 +11,7 @@ DECLARE
     v_nokeycols        VARCHAR2(4000);
     v_str              VARCHAR2(4000);
     v_aux              VARCHAR2(1024);
-    v_commit_freq      NUMBER := 240;
+    v_commit_freq      NUMBER := 1000;
     v_commit_sttm      VARCHAR2(128) := 'commit write nowait batch;';
     v_count            NUMBER := 0;
     v_source           VARCHAR2(128);
@@ -112,17 +112,17 @@ BEGIN
     UTL_FILE.PUT_LINE(f1, '*/');
 
     UTL_FILE.PUT_LINE(f1, 'whenever sqlerror continue');
-    UTL_FILE.PUT_LINE(f1, 'set echo on define off verify off serveroutput on timing off');
+    UTL_FILE.PUT_LINE(f1, 'set echo off define off verify off serveroutput on timing off');
     UTL_FILE.PUT_LINE(f1, 'show user');
     UTL_FILE.PUT_LINE(f1, 'show con_name');
     UTL_FILE.PUT_LINE(f1, 'accept v_answer char prompt ''Would you like to continue? ''');
     UTL_FILE.PUT_LINE(f1, 'alter session set cursor_sharing=force;');
 
-    UTL_FILE.PUT_LINE(f1, 'set echo off termout off');
+    UTL_FILE.PUT_LINE(f1, 'set termout off');
     UTL_FILE.PUT_LINE(f1, 'var t1 char(30)');
     UTL_FILE.PUT_LINE(f1, 'var t2 char(30)');
     UTL_FILE.PUT_LINE(f1, 'exec :t1:=to_char(sysdate,''yyyy.mm.dd hh24:mi:ss'');');
-    UTL_FILE.PUT_LINE(f1, 'set termout on echo on');
+    UTL_FILE.PUT_LINE(f1, 'set termout on');
 
                                         
     v_count := 0;
@@ -135,7 +135,7 @@ BEGIN
         n:=v_pk.first;
         IF i.remote_rowid IS NULL AND i.local_rowid  IS NOT NULL THEN
               --rows which exist in replica only, they have to be deleted from replica
-              v_str:='delete from &&rp_owner..&&rp_name where ';
+              v_str:='delete /* repair_sql */  from &&rp_owner..&&rp_name where ';
               WHILE n IS NOT NULL
               LOOP
                   v_keyval:=regexp_substr(i.index_value,'[^,]+', 1, v_keypos);
@@ -152,7 +152,7 @@ BEGIN
               v_count := v_count + 1;
         ELSIF i.remote_rowid IS not NULL  AND i.local_rowid IS NULL THEN
               --rows which exist in source but no in replica, they have to be inserted into replica
-              v_str := 'insert into &&rp_owner..&&rp_name ('||v_allcols||')';
+              v_str := 'insert /* repair_sql */ into &&rp_owner..&&rp_name ('||v_allcols||')';
               UTL_FILE.PUT_LINE(f1, v_str);
               v_str := 'select '||v_allcols||' from '||v_source||' where ';
               WHILE n IS NOT NULL
@@ -182,7 +182,7 @@ BEGIN
                   n := v_pk.NEXT(n);
                   v_keypos:=v_keypos+1;
               END LOOP;
-              v_str:='merge into &&rp_owner..&&rp_name r using ( select '||v_allcols||' from '||v_source||' where '||v_aux||' ) s';
+              v_str:='merge /* repair_sql */ into &&rp_owner..&&rp_name r using ( select '||v_allcols||' from '||v_source||' where '||v_aux||' ) s';
               UTL_FILE.PUT_LINE(f1, v_str);
 
               v_aux:='';
@@ -213,7 +213,7 @@ BEGIN
        UTL_FILE.PUT_LINE(f1, v_commit_sttm);
     END IF;
 
-    UTL_FILE.PUT_LINE(f1, 'set echo off termout off');
+    UTL_FILE.PUT_LINE(f1, 'set termout off');
     UTL_FILE.PUT_LINE(f1, 'exec :t2:=to_char(sysdate,''yyyy.mm.dd hh24:mi:ss'');');
     UTL_FILE.PUT_LINE(f1, 'select (24*3600)*( to_date(:t2, ''yyyy.mm.dd hh24:mi:ss'')-to_date(:t1, ''yyyy.mm.dd hh24:mi:ss'') ) as elatime from dual; ');
     UTL_FILE.PUT_LINE(f1, 'set termout on');

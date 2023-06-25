@@ -44,10 +44,10 @@ Prompt see sql-session with module='DBMS_COMPARISON' and action='creating compar
 declare
  v_comparison_name      varchar2(128) := '&&v_c_name';
  v_rep_owner            varchar2(30) := upper('&&rp_owner');
- v_rep_table            varchar2(30) := upper('&&rp_name');
+ v_rep_table            varchar2(128) := upper('&&rp_name');
  v_dblink               varchar2(30) := '&&dblink_name';
  v_srs_owner            varchar2(30) := upper('&&sc_owner');
- v_srs_table            varchar2(30) := upper('&&sc_name');
+ v_srs_table            varchar2(128) := upper('&&sc_name');
  v_indexname            varchar2(30) := '&&v_answer';
  v_column_list          varchar2(4000) := '';
  v1                     number;
