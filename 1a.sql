@@ -100,7 +100,7 @@ begin
        select current_scn||'' as col1 into v_scn from v$database@&&DBLINK_NAME;
        dbms_output.put_line('SCN: '||v_scn);
 
-       if v_comp_mode in ('compress', 'row store compress basic', 'row store compress basic') then
+       if v_comp_mode in ('compress', 'row store compress advanced', 'row store compress basic') then
            dbms_output.put_line('Compress mode: '||v_comp_mode);
        else
            dbms_output.put_line('Empty or unexpected value for compress mode: '||v_comp_mode);
@@ -115,8 +115,8 @@ begin
               and i.virtual_column != 'YES'
            then
               if n = 1 then v_allcols:=i.column_name; else v_allcols:=v_allcols||','||i.column_name; end if;
+              n := n + 1;
            end if;
-           n := n + 1;
        end loop;
        dbms_output.put_line('Source-columns for CTAS: '||v_allcols);
        v_str :=                 'create table '||v_lc_owner||'.'||v_lc_name||' tablespace '||v_ts;

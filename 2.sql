@@ -1,13 +1,16 @@
 undefine v_answer
+set heading on linesize 256
 
   Prompt >Replica-side key info
-  column ctype heading "ctype" format A1
-  column cname heading "cnamr" format A30
-  column col_name heading "col_name" format A30
+  column ctype heading "t" format A1
+  column cname heading "cname" format A20
+  column col_name heading "col_name" format A20
   column col_position heading "col_pos" format  99
+  column idxname heading "idxname" format A40
   
   SELECT  c.constraint_type as ctype
          ,c.constraint_name as cname
+         ,c.index_owner||'.'||c.index_name as idxname
          ,cc.column_name as col_name
          ,cc.position as col_position
   FROM sys.dba_constraints c, sys.dba_cons_columns cc
@@ -22,6 +25,7 @@ undefine v_answer
   Prompt >Source-side key info:
   SELECT  c.constraint_type as ctype
          ,c.constraint_name as cname
+         ,c.index_owner||'.'||c.index_name as idxname
          ,cc.column_name as col_name
          ,cc.position as col_position
   FROM sys.dba_constraints@&&DBLINK_NAME c, sys.dba_cons_columns@&&DBLINK_NAME cc
@@ -48,7 +52,7 @@ declare
  v_dblink               varchar2(30) := '&&dblink_name';
  v_srs_owner            varchar2(30) := upper('&&sc_owner');
  v_srs_table            varchar2(128) := upper('&&sc_name');
- v_indexname            varchar2(30) := '&&v_answer';
+ v_indexname            varchar2(128) := '&&v_answer';
  v_column_list          varchar2(4000) := '';
  v1                     number;
 

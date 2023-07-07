@@ -1,4 +1,4 @@
-set newp none pagesize 0 linesize 1024 appinfo DBMS_COMPARISON verify off linesize 1024 serveroutput on echo off feedback off
+set newp none pagesize 1000 linesize 1024 appinfo DBMS_COMPARISON verify off linesize 1024 serveroutput on echo off feedback off
 set history on
 DEFINE _EDITOR = vi
 whenever sqlerror exit failure
@@ -23,15 +23,15 @@ undefine compress_mode
 undefine session_module
 var v_flag char(1)
 
-define sc_owner="SM"
-define sc_name="SUPPORT_EXPEDITION"
-define rp_owner="R_LM_157"
-define rp_name="SUPPORT_EXPEDITION"
-define dblink_name="LMPROD.WORLD"
+define sc_owner="COM"
+define sc_name="TABLE#COM_ORDER_LINE"
+define rp_owner="SMART"
+define rp_name="COM_ORDER_LINE"
+define dblink_name="SKS_PROD_COMPRO_RU.WORLD"
 define v_c_name="&&rp_owner._&&rp_name"
 define v_dirname="GGATEEXP"
 define v_dop=1
-define compress_mode="none"
+define compress_mode="compress"
 define localdblink="LOCALDB.WORLD"
 define LOCAL_TEMP_COPY="COMPARISON_COPY_OF_SOURCE_TABLE"
 define LOCAL_TEMP_COPY_PK_NAME="&&LOCAL_TEMP_COPY._PK"
