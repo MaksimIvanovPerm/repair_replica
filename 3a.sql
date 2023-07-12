@@ -147,7 +147,7 @@ begin
            n:=n+1;
        end loop;
    
-       if v_comp_mode in ('compress', 'row store compress basic', 'row store compress basic') then
+       if v_comp_mode in ('compress', 'row store compress basic', 'row store compress advanced') then
            dbms_output.put_line('Compress mode: '||v_comp_mode);
        else
            dbms_output.put_line('Empty or unexpected value for compress mode: '||v_comp_mode);
